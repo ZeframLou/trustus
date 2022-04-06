@@ -88,6 +88,10 @@ abstract contract Trustus {
         return (recoveredAddress != address(0)) && isTrusted[recoveredAddress];
     }
 
+    function _setIsTrusted(address signer, bool isTrusted_) internal virtual {
+        isTrusted[signer] = isTrusted_;
+    }
+
     /// -----------------------------------------------------------------------
     /// EIP-2612 compliance
     /// -----------------------------------------------------------------------
