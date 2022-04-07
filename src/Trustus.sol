@@ -10,6 +10,7 @@ abstract contract Trustus {
         uint8 v;
         bytes32 r;
         bytes32 s;
+        bytes32 request;
         uint256 deadline;
         bytes payload;
     }
@@ -38,8 +39,8 @@ abstract contract Trustus {
     /// Modifiers
     /// -----------------------------------------------------------------------
 
-    modifier verifyPacket(TrustusPacket calldata packet) {
-        if (!_verifyPacket(packet)) revert Trustus__InvalidPacket();
+    modifier verifyPacket(bytes32 request, TrustusPacket calldata packet) {
+        if (!_verifyPacket(request, packet)) revert Trustus__InvalidPacket();
         _;
     }
 
@@ -56,13 +57,16 @@ abstract contract Trustus {
     /// Packet verification
     /// -----------------------------------------------------------------------
 
-    function _verifyPacket(TrustusPacket calldata packet)
+    function _verifyPacket(bytes32 request, TrustusPacket calldata packet)
         internal
         virtual
         returns (bool success)
     {
         // verify deadline
         if (block.timestamp > packet.deadline) return false;
+
+        // verify request
+        if (request != packet.request) return false;
 
         // verify signature
         address recoveredAddress = ecrecover(
@@ -73,8 +77,9 @@ abstract contract Trustus {
                     keccak256(
                         abi.encode(
                             keccak256(
-                                "VerifyPacket(uint256 deadline,bytes payload)"
+                                "VerifyPacket(bytes32 request,uint256 deadline,bytes payload)"
                             ),
+                            packet.request,
                             packet.deadline,
                             packet.payload
                         )
