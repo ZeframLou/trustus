@@ -36,7 +36,7 @@ abstract contract Trustus {
     /// Immutable parameters
     /// -----------------------------------------------------------------------
 
-    /// @notice THe chain ID used by EIP-712
+    /// @notice The chain ID used by EIP-712
     uint256 internal immutable INITIAL_CHAIN_ID;
 
     /// @notice The domain separator used by EIP-712
