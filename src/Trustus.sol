@@ -98,7 +98,7 @@ abstract contract Trustus {
     }
 
     /// -----------------------------------------------------------------------
-    /// EIP-2612 compliance
+    /// EIP-712 compliance
     /// -----------------------------------------------------------------------
 
     function DOMAIN_SEPARATOR() public view virtual returns (bytes32) {
