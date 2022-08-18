@@ -8,16 +8,16 @@ Trust-minimized method for accessing offchain data onchain. No, it's not a joke 
 
 Suppose we have:
 
--   A server with an API that provides some useful information (e.g. the weather in Philedelphia today)
--   A smart contract that wants to access said information from the server
+- A server with an API that provides some useful information (e.g. the weather in Philedelphia today)
+- A smart contract that wants to access said information from the server
 
 How can we implement it? How can we let the smart contract access the offchain data from the server?
 
 One way to do it is to use [Chainlink](https://docs.chain.link/docs/make-a-http-get-request/) to make an HTTP GET request to the server, but this is terrible!
 
--   We need to rely on Chainlink nodes, whose level of centralization is rather controversial
--   We need to hold LINK tokens in the contract and pay the nodes for each request
--   We need to implement a callback pattern, which is asynchronous and messy
+- We need to rely on Chainlink nodes, whose level of centralization is rather controversial
+- We need to hold LINK tokens in the contract and pay the nodes for each request
+- We need to implement a callback pattern, which is asynchronous and messy
 
 Trustus offers a superior solution that is trust-minimized. Trustus-powered contracts do not rely on any third-party network of nodes, nor do they need to make payments for the requests or implement a callback pattern. The only centralized & trusted component is the server, which has to be trusted anyways, hence the term "trust-minimized".
 
@@ -67,4 +67,42 @@ make build
 
 ```
 make test
+```
+
+### Signature generation
+
+Trustus uses EIP-712 for signing structured data. The following is an example of signature generation using ethers.js.
+
+```js
+const ethers = require("ethers");
+
+const signer = ethers.Wallet.createRandom();
+
+const domain = {
+  name: "Trustus",
+  version: "1",
+  chainId: 1, // ethereum mainnet
+  verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC", // change to your Trustus contract's address
+};
+
+const types = {
+  VerifyPacket: [
+    { name: "request", type: "bytes32" },
+    { name: "deadline", type: "uint256" },
+    { name: "payload", type: "bytes" },
+  ],
+};
+
+// The data to sign
+const value = {
+  request: ethers.utils.keccak256(
+    ethers.utils.toUtf8Bytes("MyRequest(string)")
+  ), // identifier for different types of requests your Trustus contract specifies
+  deadline: Math.floor(Date.now() + 600), // 10 minutes in the future
+  payload: ethers.utils.toUtf8Bytes("Hello world!"),
+};
+
+const signature = await signer._signTypedData(domain, types, value);
+
+console.log(signature);
 ```
