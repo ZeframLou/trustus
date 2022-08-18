@@ -106,7 +106,7 @@ abstract contract Trustus {
                             ),
                             packet.request,
                             packet.deadline,
-                            packet.payload
+                            keccak256(packet.payload)
                         )
                     )
                 )
