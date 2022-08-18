@@ -4,7 +4,7 @@ fuzz_runs = 256
 optimizer = true
 optimizer_runs = 1000000
 remappings = [
-  "ds-test/=lib/ds-test/src/",
+  "forge-std/=lib/forge-std/src/",
   "solmate/=lib/solmate/src/",
   "weird-erc20/=lib/solmate/lib/weird-erc20/src/"
 ]

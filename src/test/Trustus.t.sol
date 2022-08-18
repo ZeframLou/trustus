@@ -1,35 +1,41 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.4;
 
-import {BaseTest, console} from "./base/BaseTest.sol";
-import {TrustusImpl} from "./utils/TrustusImpl.sol";
+import "forge-std/Test.sol";
+
 import {Trustus} from "../Trustus.sol";
+import {TrustusImpl} from "./utils/TrustusImpl.sol";
 
-interface CheatCodes {
-    // Set block.timestamp
-    function warp(uint256) external;
-}
-
-contract TrustusTest is BaseTest {
-    CheatCodes cheats = CheatCodes(HEVM_ADDRESS);
+contract TrustusTest is Test {
     TrustusImpl trustus;
-    address trustedAddress = 0x703484b2c3f1e5f4034C27C979Fe600eAf247086;
-    bytes32 request = "GetPrice(address)";
+    uint256 constant trustedPK = 1;
+    address trustedAddress = vm.addr(trustedPK);
+    bytes32 constant request = "GetPrice(address)";
     uint256 deadline = block.timestamp + 100000;
-    bytes payload = "69420";
-
-    // pre-calculated for the signer trustedAddress and the above request, deadline, payload
-    // using ethersjs signer.signDigest(message) method
-    bytes32 r =
-        0x232026443bc5527254d0e38f3ef3c34d08c6bbea4b19e347ef9b8ef8ff373ead;
-    bytes32 s =
-        0x15a5fedbef81fad075fe0bf3933a642d457ac7aa57d60e2a00e1f264b4ef983b;
-    uint8 v = 28;
+    bytes constant payload = "69420";
 
     Trustus.TrustusPacket packet;
 
     function setUp() public {
         trustus = new TrustusImpl(trustedAddress);
+
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                trustus.DOMAIN_SEPARATOR(),
+                keccak256(
+                    abi.encode(
+                        keccak256(
+                            "VerifyPacket(bytes32 request,uint256 deadline,bytes payload)"
+                        ),
+                        request,
+                        deadline,
+                        keccak256(payload)
+                    )
+                )
+            )
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(trustedPK, digest);
 
         packet = Trustus.TrustusPacket({
             v: v,
@@ -61,7 +67,7 @@ contract TrustusTest is BaseTest {
     }
 
     function testFailOverDeadline() public {
-        cheats.warp(deadline + 10);
+        vm.warp(deadline + 10);
         assertTrue(trustus.verify(request, packet));
     }
 
